@@ -2,7 +2,6 @@
 
 Contains general utilities.
 """
-import numpy as np
 
 def validate_distribution_dict(params):
     """Checks whether the provided distribution type is supported and all parameters are included."""

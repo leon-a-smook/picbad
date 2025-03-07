@@ -46,7 +46,7 @@ class Brush():
 
         # Generate osmotic pressure profile
         self.phi_N = self.phi/((4/3)*np.pi*(self.monomer_size/2)**3) 
-        self.osm_press = self.osmotic_prefactor*(kT/self.monomer_size**3)*(self.phi_N)**(3*self.nu/(3*self.nu-1))
+        self.osmotic_pressure = self.osmotic_prefactor*(kT/self.monomer_size**3)*(self.phi_N)**(3*self.nu/(3*self.nu-1))
 
     def generate_profile(self,params):
         utils.validate_distribution_dict(params)
@@ -62,7 +62,8 @@ class Brush():
         
         # Compute the survival function
         sf = 1 - np.cumsum(pdf(self.N_RANGE))/np.sum(pdf(self.N_RANGE))
-        
+        sf[sf < 0] = 0 # Prevent numerical errors through negative survival functions
+
         # Compute corresponding volume densities
         d0 = 1/np.sqrt(self.grafting_density)
         phi = ((self.monomer_size/d0)*sf**(1/2))**(3-1/self.nu)
@@ -95,3 +96,83 @@ class Brush():
         else:
             self.z = z
             self.phi = phi
+
+    def insert_particle(self,radius,beta=0.0):
+        """This function inserts a particle into a brush with a defined radius. The effect of the 
+        surface is accounted for with the parameter beta. The expressions are the same as used in
+        [de Beer, Macromolecules, 2016, 49, 1070-1078]."""
+
+        # Perpare data structures
+        E_osmotic, E_surface = np.zeros_like(self.z), np.zeros_like(self.z)
+
+        # Integrate energy contributions over particle with finite size
+        for i, h in enumerate(self.z):
+            r_vals = np.real(np.emath.sqrt(radius**2 - (h-self.z)**2))
+            E_osmotic[i] = np.trapz(self.osmotic_pressure*np.pi*r_vals**2, self.z)
+            valid_mask = self.phi_N > 0
+            y = -beta*self.osmotic_pressure[valid_mask]*self.phi_N[valid_mask]**(-self.nu/(3*self.nu-1))*np.pi*r_vals[valid_mask]
+            E_surface[i] = np.trapz(y,self.z[valid_mask])
+
+        self.insertion_energy = E_osmotic + E_surface
+        self.insertion_force = -np.diff(self.insertion_energy,append=0)/np.diff(self.z,append=1)
+        
+    def compress_profile(self,beta=0.0, redistribute_polymer=True, z_min=0.0, surface_area=1):
+        """This function compresses the density profile and computes the work done and force exerted."""
+        z_rev = self.z[::-1]
+        # phi_rev = self.osm_press[::-1]
+        phi_rev = self.phi_N[::-1]
+        # Find indices where values are NaN
+        nan_indices = np.isnan(phi_rev)
+
+        # Interpolate missing values
+        phi_rev[nan_indices] = np.interp(
+            np.flatnonzero(nan_indices),  # Indices of NaNs
+            np.flatnonzero(~nan_indices), # Indices of non-NaNs
+            phi_rev[~nan_indices]             # Corresponding non-NaN values
+        )
+        # Collect the relevant density profile
+        z_rev = self.z[::-1]
+        phi_rev = self.phi_N[::-1]
+
+        # Create a copy of density profile for redistribution
+        phi_rev_og = np.copy(phi_rev)
+
+        # Prepare data structures for results
+        E_osm = np.zeros_like(phi_rev)
+        E_surf = np.zeros_like(phi_rev)
+
+        # For each height, compute the osmotic and surface energy
+        dz = np.diff(self.z,append=1)
+        for i, z in enumerate(z_rev):
+            # Only compute for positive z-values above 0.0 and minimum 
+            if z <= z_min or z <= 0.0:
+                break
+
+            # Compute osmotic work by integrating osmotic pressure slice
+            osm_press = self.osmotic_prefactor*(self.kT/self.monomer_size**3)*(phi_rev[i])**(3*self.nu/(3*self.nu-1))
+            delta_work = osm_press*dz[i]
+            if i == 0:
+                E_osm[i] = delta_work
+            else:
+                E_osm[i] = E_osm[i-1] + delta_work
+            
+            # Compute surface work (check if base > 0.0 to prevent errors)
+            if phi_rev[i] > 0.0:
+                E_surf[i] = -beta*osm_press*phi_rev[i]**(-self.nu/(3*self.nu-1))
+            else:
+                E_surf[i] = 0   
+            if i == 0:
+                displaced = 0
+            else:
+                displaced = phi_rev[i]*dz[i]
+            
+            phi_rev[:i] = 0
+
+            # Redistribute polymer if requested
+            if redistribute_polymer:
+                phi_rev[i:] += displaced/z
+        
+        # Aggregate results
+        self.compression_energy = E_osm[::-1] + E_surf[::-1]
+        self.compression_energy *= surface_area
+        self.compression_force = -np.diff(self.compression_energy,append=0)/np.diff(self.z,append=1)
