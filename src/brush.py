@@ -4,8 +4,8 @@ import pandas as pd
 from scipy.special import gamma
 
 # Custom imports
-import src.utils as utils
-import src.config as config
+import utils
+import config
 
 # Testing
 import matplotlib.pyplot as plt
@@ -174,5 +174,5 @@ class Brush():
         
         # Aggregate results
         self.compression_energy = E_osm[::-1] + E_surf[::-1]
-        self.compression_energy *= surface_area
+        self.compression_energy = self.compression_energy*surface_area
         self.compression_force = -np.diff(self.compression_energy,append=0)/np.diff(self.z,append=1)

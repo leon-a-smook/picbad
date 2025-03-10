@@ -1,0 +1,6 @@
+README.md
+setup.py
+src/picbad.egg-info/PKG-INFO
+src/picbad.egg-info/SOURCES.txt
+src/picbad.egg-info/dependency_links.txt
+src/picbad.egg-info/top_level.txt

@@ -35,8 +35,8 @@ def main():
     x = data.z.to_numpy() - 3.0 # OFFSET BECAUSE WALL HAS THICKNESS
     y = data.F_mean.to_numpy()
     fig, ax = plt.subplots()
-    ax.plot(brush.z, brush.insertion_force,label='theory')
-    ax.plot(brush_2.z, brush_2.insertion_force,label='sim-based')
+    ax.plot(brush.z, brush.compression_force,label='theory')
+    ax.plot(brush_2.z, brush_2.compression_force,label='sim-based')
     ax.plot(x,y,label='simulation')
     ax.set_xlim([20,100])
     ax.set_ylim([0,3])
