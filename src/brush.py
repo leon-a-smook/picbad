@@ -120,7 +120,7 @@ class Brush():
         """This function compresses the density profile and computes the work done and force exerted."""
         z_rev = self.z[::-1]
         # phi_rev = self.osm_press[::-1]
-        phi_rev = self.phi_N[::-1]
+        phi_rev = np.copy(self.phi_N[::-1])
         # Find indices where values are NaN
         nan_indices = np.isnan(phi_rev)
 
@@ -130,10 +130,7 @@ class Brush():
             np.flatnonzero(~nan_indices), # Indices of non-NaNs
             phi_rev[~nan_indices]             # Corresponding non-NaN values
         )
-        # Collect the relevant density profile
-        z_rev = self.z[::-1]
-        phi_rev = self.phi_N[::-1]
-
+        
         # Create a copy of density profile for redistribution
         phi_rev_og = np.copy(phi_rev)
 

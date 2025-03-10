@@ -8,6 +8,7 @@ N_MAX = 1e3
 
 # Visualization
 FIGURE_SIZE = (3.2,2)
+FIGURE_SIZE_LARGE = (7,4)
 FIGURE_DPI = 300
 mpl.rcParams['font.size'] = 7
 mpl.rcParams['lines.linewidth'] = 0.75
