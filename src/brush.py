@@ -86,16 +86,24 @@ class Brush():
         data = pd.read_csv(params["filename"])
         z = data.z.to_numpy()
         phi = data.F_mean.to_numpy()*particle_size
+        ci_lower = data.CI_lower.to_numpy()*particle_size
+        ci_upper = data.CI_upper.to_numpy()*particle_size 
 
         # Resample data if data is not uniform
         if np.std(np.diff(z)) > 0:
             z_resampled = np.arange(0,np.max(z)+self.DENSITY_PROFILE_RESOLUTION,step=self.DENSITY_PROFILE_RESOLUTION)
             phi_resampled = np.interp(z_resampled,z,phi)
+            ci_lower_resampled = np.interp(z_resampled,z,ci_lower)
+            ci_upper_resampled = np.interp(z_resampled,z,ci_upper)
             self.z = z_resampled
             self.phi = phi_resampled
+            self.ci_lower = ci_lower_resampled
+            self.ci_upper = ci_upper_resampled
         else:
             self.z = z
             self.phi = phi
+            self.ci_lower = ci_lower
+            self.ci_upper = ci_upper
 
     def insert_particle(self,radius,beta=0.0):
         """This function inserts a particle into a brush with a defined radius. The effect of the 
