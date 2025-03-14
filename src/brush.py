@@ -21,12 +21,14 @@ class Brush():
                  nu: float = 0.588, 
                  kT: float = 1.0,
                  monomer_size: float = 1.0,
-                 osmotic_prefactor: float = 1.0):
+                 osmotic_prefactor: float = 1.0,
+                 volume_scaling: float = 1.0):
         
         # Default parameters
         self.N_MAX = 1e3
         self.N_RANGE = np.arange(0,config.N_MAX+1,step=1)
-        self.DENSITY_PROFILE_RESOLUTION = 0.1
+        self.DENSITY_PROFILE_RESOLUTION = 0.01
+        
 
         # Set general brush parameters
         self.grafting_density = grafting_density
@@ -35,6 +37,7 @@ class Brush():
         self.monomer_size = monomer_size
         self.osmotic_prefactor = osmotic_prefactor
         self.has_profile = False
+        self.volume_scaling = volume_scaling
 
         # Load or generate density profile
         if profile_type not in ["model","simulation"]:
@@ -45,7 +48,6 @@ class Brush():
             self.load_profile(params)
 
         # Generate osmotic pressure profile
-        self.phi_N = self.phi/((4/3)*np.pi*(self.monomer_size/2)**3) 
         self.osmotic_pressure = self.osmotic_prefactor*(kT/self.monomer_size**3)*(self.phi_N)**(3*self.nu/(3*self.nu-1))
 
     def generate_profile(self,params):
@@ -79,29 +81,30 @@ class Brush():
 
         self.z = z_resampled
         self.phi = phi_resampled
+        self.phi_N = self.phi*self.volume_scaling
+    
 
     def load_profile(self,params):
         utils.validate_load_profile_dict(params)
-        particle_size = (4/3)*np.pi*(self.monomer_size/2)**3
         data = pd.read_csv(params["filename"])
         z = data.z.to_numpy()
-        phi = data.F_mean.to_numpy()*particle_size
-        ci_lower = data.CI_lower.to_numpy()*particle_size
-        ci_upper = data.CI_upper.to_numpy()*particle_size 
+        phi_N = data.F_mean.to_numpy()
+        ci_lower = data.CI_lower.to_numpy()
+        ci_upper = data.CI_upper.to_numpy()
 
         # Resample data if data is not uniform
         if np.std(np.diff(z)) > 0:
             z_resampled = np.arange(0,np.max(z)+self.DENSITY_PROFILE_RESOLUTION,step=self.DENSITY_PROFILE_RESOLUTION)
-            phi_resampled = np.interp(z_resampled,z,phi)
+            phi_N_resampled = np.interp(z_resampled,z,phi_N)
             ci_lower_resampled = np.interp(z_resampled,z,ci_lower)
             ci_upper_resampled = np.interp(z_resampled,z,ci_upper)
             self.z = z_resampled
-            self.phi = phi_resampled
+            self.phi_N = phi_N_resampled
             self.ci_lower = ci_lower_resampled
             self.ci_upper = ci_upper_resampled
         else:
             self.z = z
-            self.phi = phi
+            self.phi_N = phi_N
             self.ci_lower = ci_lower
             self.ci_upper = ci_upper
 
