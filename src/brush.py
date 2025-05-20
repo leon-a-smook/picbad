@@ -61,6 +61,8 @@ class Brush():
             shape = 1/(D - 1)
             scale = Mn/shape
             pdf = lambda N: N**(shape-1)*np.exp(-N/scale)/(scale**shape * gamma(shape))
+        else:
+            raise(ValueError(f"The distribution '{params["type"]}' has not been defined"))
         
         # Compute the survival function
         sf = 1 - np.cumsum(pdf(self.N_RANGE))/np.sum(pdf(self.N_RANGE))
