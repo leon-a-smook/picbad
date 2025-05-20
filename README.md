@@ -9,3 +9,4 @@
 OR
 
 1. Open the [demo notebook](https://mybinder.org/v2/gh/leon-a-smook/picbad/HEAD?urlpath=%2Fdoc%2Ftree%2Fpicbad-demo.ipynb) online
+2. Restart the kernel and run the notebook
