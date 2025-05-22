@@ -9,4 +9,7 @@
 OR
 
 1. Open the [demo notebook](https://mybinder.org/v2/gh/leon-a-smook/picbad/HEAD?urlpath=%2Fdoc%2Ftree%2Fpicbad-demo.ipynb) online
-2. Restart the kernel and run the notebook
+2. Run the first two code cells
+3. Restart the kernel
+4. Run all cells in order
+5. Change any of the brushes to your desire
