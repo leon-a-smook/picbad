@@ -123,7 +123,7 @@ class Brush():
             r_vals = np.real(np.emath.sqrt(radius**2 - (h-self.z)**2))
             E_osmotic[i] = np.trapz(self.osmotic_pressure*np.pi*r_vals**2, self.z)
             valid_mask = self.phi_N > 0
-            y = -beta*self.osmotic_pressure[valid_mask]*self.phi_N[valid_mask]**(-self.nu/(3*self.nu-1))*np.pi*r_vals[valid_mask]
+            y = -2*beta*self.osmotic_pressure[valid_mask]*self.phi_N[valid_mask]**(-self.nu/(3*self.nu-1))*np.pi*r_vals[valid_mask]
             E_surface[i] = np.trapz(y,self.z[valid_mask])
 
         self.insertion_energy = E_osmotic + E_surface
