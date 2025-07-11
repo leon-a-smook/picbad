@@ -1,4 +1,4 @@
-# Particle Insertion into and Compression of Polyelectrolyte Brushes
+# Particle Insertion into and Compression of Polymer Brushes
 
 ### How to use
 1. Clone the repository
